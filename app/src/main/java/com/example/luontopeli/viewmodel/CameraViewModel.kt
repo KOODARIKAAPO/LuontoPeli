@@ -117,7 +117,9 @@ class CameraViewModel @Inject constructor(
                 longitude = currentLongitude,
                 imageLocalPath = imagePath,
                 plantLabel = result.label,
-                confidence = result.confidence
+                confidence = result.confidence,
+                imageFirebaseUrl = null
+
             )
 
             repository.insertSpot(spot)

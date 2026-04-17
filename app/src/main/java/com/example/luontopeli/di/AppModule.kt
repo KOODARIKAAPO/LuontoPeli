@@ -36,51 +36,41 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNatureSpotDao(
-        database: AppDatabase
-    ): NatureSpotDao {
+    fun provideNatureSpotDao(database: AppDatabase): NatureSpotDao {
         return database.natureSpotDao()
     }
 
     @Provides
     @Singleton
-    fun provideWalkSessionDao(
-        database: AppDatabase
-    ): WalkSessionDao {
+    fun provideWalkSessionDao(database: AppDatabase): WalkSessionDao {
         return database.walkSessionDao()
     }
 
     @Provides
     @Singleton
-    fun provideFirestoreManager(): FirestoreManager {
-        return FirestoreManager()
-    }
+    fun provideAuthManager(): AuthManager = AuthManager()
 
     @Provides
     @Singleton
-    fun provideAuthManager(): AuthManager {
-        return AuthManager()
-    }
+    fun provideFirestoreManager(): FirestoreManager = FirestoreManager()
 
     @Provides
     @Singleton
-    fun provideStorageManager(): StorageManager {
-        return StorageManager()
-    }
+    fun provideStorageManager(): StorageManager = StorageManager()
 
     @Provides
     @Singleton
     fun provideNatureSpotRepository(
         dao: NatureSpotDao,
         firestoreManager: FirestoreManager,
-        authManager: AuthManager,
-        storageManager: StorageManager
+        storageManager: StorageManager,
+        authManager: AuthManager
     ): NatureSpotRepository {
         return NatureSpotRepository(
             dao = dao,
             firestoreManager = firestoreManager,
-            authManager = authManager,
-            storageManager = storageManager
+            storageManager = storageManager,
+            authManager = authManager
         )
     }
 }

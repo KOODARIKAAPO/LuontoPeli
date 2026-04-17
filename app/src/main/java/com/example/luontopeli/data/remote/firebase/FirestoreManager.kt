@@ -6,8 +6,11 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class FirestoreManager {
+@Singleton
+class FirestoreManager @Inject constructor() {
 
     private val db = FirebaseFirestore.getInstance()
     private val spotsCollection = db.collection("nature_spots")
@@ -17,6 +20,7 @@ class FirestoreManager {
             val data = mapOf(
                 "id" to spot.id,
                 "name" to spot.name,
+                "note" to spot.note,
                 "latitude" to spot.latitude,
                 "longitude" to spot.longitude,
                 "imageLocalPath" to spot.imageLocalPath,
@@ -45,18 +49,24 @@ class FirestoreManager {
                 }
 
                 val spots = snapshot?.documents?.mapNotNull { doc ->
-                    NatureSpot(
-                        id = doc.getString("id") ?: "",
-                        name = doc.getString("name") ?: "",
-                        latitude = doc.getDouble("latitude") ?: 0.0,
-                        longitude = doc.getDouble("longitude") ?: 0.0,
-                        imageFirebaseUrl = doc.getString("imageFirebaseUrl"),
-                        plantLabel = doc.getString("plantLabel"),
-                        confidence = doc.getDouble("confidence")?.toFloat(),
-                        userId = doc.getString("userId"),
-                        timestamp = doc.getLong("timestamp") ?: 0L,
-                        synced = true
-                    )
+                    try {
+                        NatureSpot(
+                            id = doc.getString("id") ?: "",
+                            name = doc.getString("name") ?: "",
+                            note = doc.getString("note"),
+                            latitude = doc.getDouble("latitude") ?: 0.0,
+                            longitude = doc.getDouble("longitude") ?: 0.0,
+                            imageLocalPath = doc.getString("imageLocalPath"),
+                            imageFirebaseUrl = doc.getString("imageFirebaseUrl"),
+                            plantLabel = doc.getString("plantLabel"),
+                            confidence = doc.getDouble("confidence")?.toFloat(),
+                            userId = doc.getString("userId"),
+                            timestamp = doc.getLong("timestamp") ?: 0L,
+                            synced = true
+                        )
+                    } catch (_: Exception) {
+                        null
+                    }
                 } ?: emptyList()
 
                 trySend(spots)

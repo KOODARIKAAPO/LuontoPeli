@@ -1,17 +1,21 @@
 package com.example.luontopeli.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.luontopeli.data.remote.firebase.AuthManager
 import com.example.luontopeli.data.remote.firebase.FirestoreManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProfileViewModel(
-    private val authManager: AuthManager = AuthManager(),
-    private val firestoreManager: FirestoreManager = FirestoreManager()
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val authManager: AuthManager,
+    private val firestoreManager: FirestoreManager
 ) : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
@@ -27,14 +31,12 @@ class ProfileViewModel(
             _currentUser.value = it.currentUser
             observeUserSpots()
         }
-
         observeUserSpots()
     }
 
     private fun observeUserSpots() {
         val user = auth.currentUser
 
-        // 🔒 Jos ei käyttäjää → ei haeta mitään
         if (user == null) {
             _totalSpots.value = 0
             return
@@ -44,21 +46,32 @@ class ProfileViewModel(
 
         viewModelScope.launch {
             firestoreManager.getUserSpots(userId)
-                .map { spots -> spots.size }
-                .catch { emit(0) }
-                .collect {
-                    _totalSpots.value = it
+                .map { it.size }
+                .catch {
+                    Log.e("PROFILE_TEST", "Error fetching spots", it)
+                    emit(0)
+                }
+                .collect { count ->
+                    _totalSpots.value = count
                 }
         }
     }
 
     fun signInAnonymously() {
         viewModelScope.launch {
-            authManager.signInAnonymously()
+            Log.e("PROFILE_TEST", "ViewModel: signInAnonymously called")
+
+            try {
+                val uid = authManager.signInAnonymouslyIfNeeded()
+                Log.e("PROFILE_TEST", "ViewModel: SUCCESS uid=$uid")
+            } catch (e: Exception) {
+                Log.e("PROFILE_TEST", "ViewModel: FAILED", e)
+            }
         }
     }
 
     fun signOut() {
         authManager.signOut()
+        Log.e("PROFILE_TEST", "User signed out")
     }
 }

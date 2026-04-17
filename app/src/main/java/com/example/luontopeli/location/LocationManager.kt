@@ -5,12 +5,18 @@ import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.os.Bundle
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.osmdroid.util.GeoPoint
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class LocationManager(context: Context) {
+@Singleton
+class LocationManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager

@@ -37,11 +37,9 @@ import com.example.luontopeli.data.local.entity.NatureSpot
 import com.example.luontopeli.viewmodel.MapViewModel
 import com.example.luontopeli.viewmodel.WalkViewModel
 import com.example.luontopeli.viewmodel.formatDistance
-import com.example.luontopeli.viewmodel.formatDuration
 import com.example.luontopeli.viewmodel.toFormattedDate
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import okhttp3.internal.concurrent.formatDuration
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -114,7 +112,7 @@ fun MapScreen(
         Box(modifier = Modifier.weight(1f)) {
             val mapViewState = remember { MapView(context) }
 
-            DisposableEffect(Unit) {
+            DisposableEffect(mapViewState) {
                 mapViewState.setTileSource(TileSourceFactory.MAPNIK)
                 mapViewState.setMultiTouchControls(true)
                 mapViewState.controller.setZoom(15.0)
@@ -136,20 +134,17 @@ fun MapScreen(
                     if (routePoints.size >= 2) {
                         val polyline = Polyline().apply {
                             setPoints(routePoints)
-                            outlinePaint.color = 0xFF2E7D32.toInt()
                             outlinePaint.strokeWidth = 8f
                         }
                         mapView.overlays.add(polyline)
                     }
 
-                    natureSpots.forEach { spot ->
-                        val lat = spot.latitude
-                        val lon = spot.longitude
-
-                        if (lat != null && lon != null) {
+                    natureSpots
+                        .filter { it.latitude != 0.0 && it.longitude != 0.0 }
+                        .forEach { spot ->
                             val marker = Marker(mapView).apply {
-                                position = GeoPoint(lat, lon)
-                                title = spot.name ?: "Löytö"
+                                position = GeoPoint(spot.latitude, spot.longitude)
+                                title = spot.name
                                 snippet = spot.timestamp.toFormattedDate()
                                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
@@ -161,7 +156,6 @@ fun MapScreen(
                             }
                             mapView.overlays.add(marker)
                         }
-                    }
 
                     currentLocation?.let { loc ->
                         if (selectedSpot == null) {
@@ -173,13 +167,13 @@ fun MapScreen(
                 }
             )
 
-            if (selectedSpot != null) {
+            selectedSpot?.let { spot ->
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     SelectedSpotCard(
-                        spot = selectedSpot!!,
+                        spot = spot,
                         onClose = { selectedSpot = null }
                     )
                 }
@@ -205,7 +199,7 @@ fun SelectedSpotCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = spot.name ?: "Tuntematon löytö",
+                text = spot.name,
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -219,18 +213,33 @@ fun SelectedSpotCard(
                 Spacer(modifier = Modifier.height(6.dp))
             }
 
+            spot.plantLabel?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    text = "Tunnistus: $it",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+
+            spot.confidence?.let {
+                Text(
+                    text = "Varmuus: ${"%.0f".format(it * 100)} %",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
             Text(
                 text = "Aika: ${spot.timestamp.toFormattedDate()}",
                 style = MaterialTheme.typography.bodySmall
             )
 
-            if (spot.latitude != null && spot.longitude != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Sijainti: %.5f, %.5f".format(spot.latitude, spot.longitude),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Sijainti: %.5f, %.5f".format(spot.latitude, spot.longitude),
+                style = MaterialTheme.typography.bodySmall
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -308,18 +317,14 @@ fun WalkStatsCard(viewModel: WalkViewModel) {
             ) {
                 if (!isWalking) {
                     Button(
-                        onClick = {
-                            viewModel.startWalk()
-                        },
+                        onClick = { viewModel.startWalk() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Aloita kävely")
                     }
                 } else {
                     OutlinedButton(
-                        onClick = {
-                            viewModel.stopWalk()
-                        },
+                        onClick = { viewModel.stopWalk() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Lopeta")

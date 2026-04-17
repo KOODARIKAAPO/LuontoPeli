@@ -22,8 +22,13 @@ accompanistPermissions = "0.34.0"
 firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 litertSupportApi = "1.4.2"
+playServicesContextmanager = "9.4.0"
+
+
 
 [libraries]
+androidx-core-spalshscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
@@ -73,6 +78,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 litert-support-api = { group = "com.google.ai.edge.litert", name = "litert-support-api", version.ref = "litertSupportApi" }
+play-services-contextmanager = { group = "com.google.android.gms", name = "play-services-contextmanager", version.ref = "playServicesContextmanager" }
 
 [plugins]
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

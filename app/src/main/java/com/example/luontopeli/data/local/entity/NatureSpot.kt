@@ -23,6 +23,7 @@ data class NatureSpot(
 
     val note: String? = "",
 
+
     /** Löydön nimi – ML Kit -tunnistustulos tai käyttäjän antama */
     val name: String,
     /** GPS-leveysaste (WGS84) */
@@ -33,7 +34,7 @@ data class NatureSpot(
     /** Kuvan paikallinen tiedostopolku (sovelluksen sisäinen tallennustila) */
     val imageLocalPath: String? = null,
     /** Firebase Storage -URL (täytetään pilvisynkronoinnissa) */
-    val imageFirebaseUrl: String? = null,
+    val imageFirebaseUrl: String?,
 
     /** ML Kit -tunnistama kasvilaji (esim. "Rosa canina") */
     val plantLabel: String? = null,
@@ -48,3 +49,4 @@ data class NatureSpot(
     /** Synkronointitila: false = vain paikallinen, true = synkronoitu Firestoreen */
     val synced: Boolean = false
 )
+

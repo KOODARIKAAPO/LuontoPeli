@@ -1,23 +1,40 @@
 package com.example.luontopeli.data.remote.firebase
-import javax.inject.Inject
-// 📁 data/remote/firebase/StorageManager.kt
 
-/**
- * Offline-tilassa toimiva tallennushallinta (no-op -toteutus).
- * Korvaa alkuperäisen Firebase Storage -toteutuksen.
- */
+import android.net.Uri
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+import java.io.File
+import javax.inject.Inject
+
 class StorageManager @Inject constructor() {
 
-    /**
-     * Simuloi kuvan lataamista pilvipalveluun.
-     * Offline-tilassa palauttaa paikallisen tiedostopolun.
-     */
+    private val storage = FirebaseStorage.getInstance()
+
     suspend fun uploadImage(localFilePath: String, spotId: String): Result<String> {
-        return Result.success(localFilePath)
+        return try {
+            val file = File(localFilePath)
+            if (!file.exists()) {
+                return Result.failure(Exception("File does not exist"))
+            }
+
+            val uri = Uri.fromFile(file)
+            val ref = storage.reference.child("nature_spots/$spotId.jpg")
+
+            ref.putFile(uri).await()
+            val downloadUrl = ref.downloadUrl.await().toString()
+
+            Result.success(downloadUrl)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    /** Simuloi kuvan poistamista pilvipalvelusta. Offline-tilassa ei tee mitään. */
     suspend fun deleteImage(spotId: String): Result<Unit> {
-        return Result.success(Unit)
+        return try {
+            storage.reference.child("nature_spots/$spotId.jpg").delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
